@@ -1,0 +1,64 @@
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+fastlane_require 'dotenv'
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Sync development certificates"
+  lane :sync_development_certificates do 
+    #read-only disables match from overriding the existing certificates
+    match(type: "development", readonly: true)
+  end
+
+  desc "Sync store certificates"
+  lane :sync_store_certificates do 
+    match(type: "appstore")
+  end
+   
+  desc "Create ipa"
+  lane :build_ipa do
+    # Increase the build number by 1
+    increment_build_number
+    # Creates a signed file
+    gym(xcargs: "-allowProvisioningUpdates")
+  end
+
+
+  desc "Runs all the tests"
+  lane :test do
+    scan
+  end
+
+  desc "Take screenshots"
+  lane :screenshot do
+    snapshot
+  end
+
+  desc "Upload to TestFlight"
+  lane :beta do
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      path: "/Users/victorchirino/Projects/hello-fastlane/hello-fastlane.xcodeproj"
+    )
+    build_ipa
+    # Deploy to Testflight
+    pilot(
+      username: "#{ENV['APPLE_DEVELOPER_EMAIL']}",
+      team_name: "#{ENV['APPLE_DEVELOPER_TEAM_NAME']}",
+    )
+  end
+
+  desc "Upload to App Store"
+  lane :upload do
+    deliver
+  end
+
+  desc "Sumbit app to App Store"
+  lane :release_app do
+    sync_store_certificates
+    build_ipa
+    screenshot
+    upload
+  end
+end
