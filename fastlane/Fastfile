@@ -13,7 +13,7 @@ platform :ios do
 
   desc "Sync store certificates"
   lane :sync_store_certificates do 
-    match(type: "appstore")
+    match(type: "appstore", readonly: true)
   end
    
   desc "Create ipa"
